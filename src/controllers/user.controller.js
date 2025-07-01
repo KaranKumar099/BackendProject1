@@ -3,7 +3,6 @@ import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/Cloudinary.js"
-import { use } from "react"
 
 const registerUser=asyncHandler(async (req, res)=>{
     // get user details from frontend
@@ -17,12 +16,13 @@ const registerUser=asyncHandler(async (req, res)=>{
     // return res
 
     const {fullName, email, username, password} = req.body
+    // console.log(req.body)
 
     if ([fullName, email, username, password].some((field) => field?.trim()==="")) {
         throw new ApiError(400, "all fields are required");
     }
 
-    const existedUser= User.findOne({
+    const existedUser= await User.findOne({
         $or:[{username},{email}]
     })
 
@@ -31,7 +31,13 @@ const registerUser=asyncHandler(async (req, res)=>{
     }
 
     const avatarFilePath=req.files?.avatar[0]?.path;
-    const coverImageFilePath=req.files?.coverImage[0]?.path;
+    // const coverImageFilePath=req.files?.coverImage[0]?.path;
+    // console.log(req.files)
+
+    let coverImageFilePath;
+    if(req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length>0){
+        coverImageFilePath=req.files.coverImage[0].path;
+    }
 
     if(!avatarFilePath){
         throw new ApiError(400, "avatar is required");
@@ -50,10 +56,10 @@ const registerUser=asyncHandler(async (req, res)=>{
         password,     // password: password
         username,     // username: username
         avatar: avatar.url,
-        coverImage:coverImage?.url||""      // coverImage: coverImage ? coverImage.url : ""
+        coverImage:coverImage?.url||"",      // coverImage: coverImage ? coverImage.url : ""
     })
 
-    const createdUser=User.findById(user._id).select(
+    const createdUser=await User.findById(user._id).select(
         "-password -refreshToken"
     )
 
