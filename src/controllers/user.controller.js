@@ -4,7 +4,6 @@ import {ApiResponse} from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
 import {uploadOnCloudinary} from "../utils/Cloudinary.js"
 import jwt from "jsonwebtoken"
-import { use } from "react"
 import mongoose from "mongoose"
 
 // access token and refresh token generation code
@@ -278,8 +277,8 @@ const updateAvatar=asyncHandler(async (req, res) => {
             }
         },{
             new: true
-        }.select("-password")
-    )
+        }
+    ).select("-password")
 
     return res.status(201).json(
         new ApiResponse(201, user, "User avatar updated successfully")
@@ -306,8 +305,8 @@ const updateCoverImage=asyncHandler(async (req, res) => {
             }
         },{
             new: true
-        }.select("-password")
-    )
+        }
+    ).select("-password")
 
     return res.status(201).json(
         new ApiResponse(201, user, "User coverImage updated successfully")
