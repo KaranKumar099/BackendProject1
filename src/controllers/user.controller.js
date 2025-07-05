@@ -1,8 +1,8 @@
-import {asyncHandler} from "../utils/AsyncHandler.js"
+import {asyncHandler} from "../utils/asyncHandler.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import { User } from "../models/user.model.js"
-import {uploadOnCloudinary} from "../utils/Cloudinary.js"
+import {uploadOnCloudinary} from "../utils/cloudinary.js"
 import jwt from "jsonwebtoken"
 import mongoose from "mongoose"
 
@@ -37,7 +37,8 @@ const registerUser=asyncHandler(async (req, res)=>{
     // return res
 
     const {fullName, email, username, password} = req.body
-    // console.log(req.body)
+    console.log(req.body)
+    console.log(req.files)
 
     if ([fullName, email, username, password].some((field) => field?.trim()==="")) {
         throw new ApiError(400, "all fields are required");
@@ -261,7 +262,7 @@ const updateAccountDetails=asyncHandler(async (req, res) => {
 
 // update avatar
 const updateAvatar=asyncHandler(async (req, res) => {
-    const avatarLocalPath=req.file.path
+    const avatarLocalPath=req.file?.path
     if(!avatarLocalPath){
         throw new ApiError(402, "Avatar file is missing")
     }
