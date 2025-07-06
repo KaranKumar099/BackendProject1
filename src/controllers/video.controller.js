@@ -11,9 +11,34 @@ import cloudinary from "cloudinary"
 const getAllVideos = asyncHandler(async (req, res) => {
     const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query
     //TODO: get all videos based on query, sort, pagination
-    res.status(200).json({
-        message: "ok"
-    })
+
+    const filter={}
+    filter.title={
+        $regex:query,
+        $options: 'i'
+    }
+    if(userId){
+        filter.user=userId
+    }
+
+    const sort={}
+    sort[sortBy]=sortType==="asc" ? 1 : -1
+
+    const videos=await Video.find(filter)
+    .sort(sort)
+    .skip((page-1)*limit)
+    .limit(parseInt(limit))
+
+    const total=await Video.countDocuments(filter)
+
+    return res.status(200).json(
+        new ApiResponse(201,{
+            total,
+            page: Number(page),
+            totalPages: Math.ceil(total/limit),
+            data: videos
+        },"all videos fetched successfully")
+    )
 })
 
 const publishAVideo = asyncHandler(async (req, res) => {
@@ -25,7 +50,6 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     // console.log(req.body)
     // console.log(req.files.videoFile)
-
     // console.log(req.files.thumbnail[0])
 
     const videoFileLocalPath=req.files?.videoFile[0]?.path
@@ -63,7 +87,7 @@ const publishAVideo = asyncHandler(async (req, res) => {
 
     const publishedVideo = await Video.findById(video._id)
     if(!publishedVideo){
-        throw new ApiError(400, "error in creating video")
+        throw new ApiError(500, "error in creating video")
     }
 
     res.status(200).json(
@@ -87,11 +111,11 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
-    const {newTitle, newDescription} =req.body
-    const newThumbnailLocalFilePath= req.files?.thumbnail[0]?.path
-    if(!newTitle && !newDescription && !newThumbnailLocalFilePath){
+    if(!req.body){
         throw new ApiError(200, "atleast one field is required")
     }
+    const {newTitle, newDescription} = req.body
+    const newThumbnailLocalFilePath= req.file?.thumbnail[0]?.path
 
     if(newThumbnailLocalFilePath){
         const vdo=await Video.findById(videoId)
@@ -106,7 +130,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             $set: {
                 title: newTitle,
                 description: newDescription,
-                thumbnail: newThumbnail.url
+                thumbnail: newThumbnail?.url
             }
         },
         {
@@ -136,7 +160,22 @@ const deleteVideo = asyncHandler(async (req, res) => {
 
 const togglePublishStatus = asyncHandler(async (req, res) => {
     const { videoId } = req.params
-    
+    const video=await Video.findById(videoId)
+    const updatedVideo=await Video.findByIdAndUpdate(
+        videoId,
+        {
+            $set:{
+                isPublished: !video.isPublished
+            }
+        },
+        {
+            new: true
+        }
+    )
+
+    return res.status(200).json(
+        new ApiResponse(201, updatedVideo, "successfully toggled publish status")
+    )
 })
 
 export {
