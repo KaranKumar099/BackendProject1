@@ -13,9 +13,11 @@ const getAllVideos = asyncHandler(async (req, res) => {
     //TODO: get all videos based on query, sort, pagination
 
     const filter={}
-    filter.title={
-        $regex:query,
-        $options: 'i'
+    if(query){    
+        filter.title={
+            $regex:query,
+            $options: 'i'
+        }
     }
     if(userId){
         filter.user=userId
@@ -111,18 +113,16 @@ const getVideoById = asyncHandler(async (req, res) => {
 const updateVideo = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     //TODO: update video details like title, description, thumbnail
-    if(!req.body){
-        throw new ApiError(200, "atleast one field is required")
-    }
     const {newTitle, newDescription} = req.body
-    const newThumbnailLocalFilePath= req.file?.thumbnail[0]?.path
-
-    if(newThumbnailLocalFilePath){
-        const vdo=await Video.findById(videoId)
-        await cloudinary.uploader.destroy(vdo.thumbnail._id, {resource_type: 'image'});
-        console.log("thumbnail deleted successfully")
-        const newThumbnail=await uploadOnCloudinary(newThumbnailLocalFilePath)
+    const newThumbnailLocalFilePath= req.file?.path
+    if(!newTitle && !newDescription && !newThumbnailLocalFilePath){
+        throw new ApiError(200, "at least one field in required")
     }
+    // console.log(req.file)
+
+    // to delete file from cloudinary
+    const thumbnail=await uploadOnCloudinary(newThumbnailLocalFilePath)
+
 
     const video = await Video.findByIdAndUpdate(
         videoId,
@@ -130,7 +130,7 @@ const updateVideo = asyncHandler(async (req, res) => {
             $set: {
                 title: newTitle,
                 description: newDescription,
-                thumbnail: newThumbnail?.url
+                thumbnail: thumbnail?.url
             }
         },
         {
@@ -139,7 +139,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     )
 
     return res.status(200).json(
-        new ApiResponse(201, video, "video details updated successfully")
+        new ApiResponse(201, {video}, "video details updated successfully")
     )
 })
 
