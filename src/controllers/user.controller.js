@@ -37,7 +37,7 @@ const registerUser=asyncHandler(async (req, res)=>{
     // return res
 
     const {fullName, email, username, password} = req.body
-    console.log(req.body)
+    // console.log(req.body)
     console.log(req.files)
 
     if ([fullName, email, username, password].some((field) => field?.trim()==="")) {
@@ -52,7 +52,7 @@ const registerUser=asyncHandler(async (req, res)=>{
         throw new ApiError(402, "User already exist")
     }
 
-    const avatarFilePath=req.files?.avatar[0]?.path;
+    const avatarFilePath=req.files?.avatar[0]?.path
     // const coverImageFilePath=req.files?.coverImage[0]?.path;
     // console.log(req.files)
 
@@ -228,9 +228,9 @@ const changeCurrentPassword=asyncHandler(async (req, res) => {
 })
 
 // get access of current user
-const getCurrentUser=asyncHandler(async (_, res) => {
+const getCurrentUser=asyncHandler(async (req, res) => {
     return res.status(201).json(
-        new ApiResponse(201, res.user, "User fetched successfully")
+        new ApiResponse(201, req.user, "User fetched successfully")
     )
 })
 
