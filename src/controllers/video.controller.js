@@ -116,7 +116,7 @@ const updateVideo = asyncHandler(async (req, res) => {
     const {newTitle, newDescription} = req.body
     const newThumbnailLocalFilePath= req.file?.path
     if(!newTitle && !newDescription && !newThumbnailLocalFilePath){
-        throw new ApiError(200, "at least one field in required")
+        throw new ApiError(400, "at least one field in required")
     }
     // console.log(req.file)
 
