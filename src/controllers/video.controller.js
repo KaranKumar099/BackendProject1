@@ -20,7 +20,7 @@ const getAllVideos = asyncHandler(async (req, res) => {
         }
     }
     if(userId){
-        filter.user=userId
+        filter.owner=userId
     }
 
     const sort={}
